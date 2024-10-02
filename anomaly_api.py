@@ -4,8 +4,7 @@
 # author : Gabriel Francisco
 # email  : gabriel.francisco@ibm.com
 # date   : 01/10/2024
-# version: 0.1b
-
+# version: 0.2b
 
 ##########################
 # SETUP INICIAL
@@ -14,6 +13,9 @@
 from flask import Flask, request, jsonify
 import joblib, smtplib, threading, time, configparser
 from email.mime.text import MIMEText
+import numpy as np
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.preprocessing import StandardScaler
 
 ##########################
 # FUNÇÕES
@@ -52,7 +54,6 @@ def update_config() -> None:
         global_config = read_config()  # Lê e atualiza as configurações
         time.sleep(60)  # Pausa de 60 segundos antes de atualizar novamente
 
-
 # Função para enviar alerta
 def send_alert(message, equipamento) -> None:
     '''
@@ -85,6 +86,33 @@ def send_alert(message, equipamento) -> None:
         server.login(username, password)  # Faz login no servidor de e-mail
         server.send_message(msg)  # Envia a mensagem de e-mail
 
+# Nova função para treinar o modelo
+def train_model(data, model_name, n_neighbors=20, contamination=0.1) -> None:
+    '''
+    Treina um modelo LOF com os dados fornecidos e salva o modelo em um arquivo pkl.
+
+    Parâmetros:
+    data : array-like
+        Dados de treinamento.
+    model_name : str
+        Nome do arquivo para salvar o modelo.
+    n_neighbors : int
+        Número de vizinhos para o LOF.
+    contamination : float
+        Proporção esperada de outliers nos dados.
+
+    Retorna:
+    None
+        Não retorna nenhum valor. O modelo treinado é salvo em um arquivo pkl.
+    '''
+    scaler = StandardScaler()  # Cria um objeto StandardScaler para normalizar os dados
+    X_scaled = scaler.fit_transform(data)  # Normaliza os dados de treinamento
+
+    lof = LocalOutlierFactor(n_neighbors=n_neighbors, contamination=contamination, novelty=True)  # Cria o modelo LOF
+    lof.fit(X_scaled)  # Treina o modelo LOF
+
+    joblib.dump((lof, scaler), f'{model_name}.pkl')  # Salva o modelo e o scaler em um arquivo pkl
+    print(f"Modelo treinado e salvo como '{model_name}.pkl'")  # Mensagem de confirmação
 
 # Função para iniciar servidor Flask para cada equipamento
 def start_server(port, equipamento) -> None:
@@ -102,18 +130,18 @@ def start_server(port, equipamento) -> None:
         Não retorna nenhum valor. A função inicia um servidor Flask que escuta na porta especificada.
     '''
     app = Flask(__name__)  # Cria uma instância do Flask
-    model = joblib.load('modelo_lof.pkl')  # Carrega o modelo de machine learning
+    model, scaler = joblib.load(f'modelo_lof_{equipamento}.pkl')  # Carrega o modelo de machine learning e o scaler
 
     @app.route('/predict', methods=['POST'])
     def predict():
         data = request.json['data']  # Obtém os dados JSON da requisição
-        prediction = model.predict(data)  # Faz a predição com o modelo
+        data_scaled = scaler.transform(data)  # Normaliza os dados da requisição
+        prediction = model.predict(data_scaled)  # Faz a predição com o modelo
         if -1 in prediction:  # Detecção de anomalia
             send_alert('Anomalia detectada no sistema! Verifique imediatamente.', equipamento)
         return jsonify({'prediction': prediction.tolist()})  # Retorna a predição em formato JSON
 
     app.run(debug=True, host='0.0.0.0', port=port)  # Inicia o servidor Flask na porta especificada
-
 
 # Função principal para iniciar threads
 def main() -> None:
@@ -143,12 +171,11 @@ def main() -> None:
     for thread in server_threads:
         thread.join()  # Aguarda todas as threads dos servidores Flask terminarem
 
-
 ##########################
 # VARIAVEIS
 ##########################
 global_config = read_config()
 
-# Inicialição da API
+# Inicialização da API
 if __name__ == '__main__':
     main()
