@@ -76,7 +76,7 @@ O Anomaly API é um sistema de detecção de anomalias baseado em aprendizado de
 
 ### 2.2. Software
 
-- Sistema Operacional: Linux (Ubuntu 20.04 LTS ou superior), Windows 10, ou macOS 10.15+
+- Sistema Operacional: Linux (Qualquer distro baseada em Debian ou RedHat)
 - Python 3.7 ou superior
 - Bibliotecas Python: Flask, NumPy, Pandas, Scikit-learn, Joblib
 
@@ -138,7 +138,7 @@ O Anomaly API é um sistema de detecção de anomalias baseado em aprendizado de
 1. Abra um terminal no diretório do projeto.
 2. Execute o seguinte comando:
    ```
-   python anomaly_api.py
+   python anomaly_api.py >> log.txt
    ```
 3. O sistema iniciará e você verá mensagens de log indicando que os servidores estão rodando.
 
@@ -146,6 +146,7 @@ O Anomaly API é um sistema de detecção de anomalias baseado em aprendizado de
 
 1. Observe o terminal para mensagens de inicialização e logs em tempo real.
 2. Verifique se não há erros durante a inicialização.
+3. Valide as informações no arquivo log.txt executado pelo comando 2 no item 5.1
 
 ## 6. Uso da API
 
