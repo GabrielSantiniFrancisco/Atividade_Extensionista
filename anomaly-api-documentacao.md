@@ -70,9 +70,10 @@ O Anomaly API é um sistema de detecção de anomalias baseado em aprendizado de
 
 ### 2.1. Hardware
 
-- Processador: Intel Core i5 ou equivalente (mínimo)
-- Memória RAM: 8GB (mínimo), 16GB (recomendado)
-- Espaço em disco: 10GB de espaço livre
+- Processador: Intel core 2 quad (mínimo) ou equivalente
+- Memória RAM: 4GB (mínimo)
+- Espaço em disco: 1GB de espaço livre
+- Nota (pode ser utilizado mini computadores, por exemplo Raspberry Pi)
 
 ### 2.2. Software
 
